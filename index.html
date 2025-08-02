@@ -12,7 +12,7 @@
     <style>
         /* Define a custom color palette for brand consistency */
         :root {
-            --forrest-green: #b6dbca; /* A light, rich green */
+            --forrest-green: #e1ebe6; /* A light, rich green */
             --gold: #d4af37;        /* A classic gold */
             --dark-bg: #111827;     /* A professional dark background */
             --dark-card: #1F2937;   /* Slightly lighter dark for cards */
@@ -129,6 +129,13 @@
             background-color: #374151;
         }
 
+        /* Custom utility for clamping text */
+        .line-clamp-3 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 lg:p-12">
@@ -329,7 +336,7 @@
         card.addEventListener('change', function(event) {
             const displayError = document.getElementById('card-errors');
             if (event.error) {
-                displayError.textContent = event.error.message;
+                displayError.textContent = error.message;
             } else {
                 displayError.textContent = '';
             }
@@ -429,6 +436,33 @@ Contact Number,,,,,,,,
             return baseRate + 12.50;
         }
 
+        // This object is where you can manually add your tea image URLs.
+        // The key must exactly match the "Tea Name" from the spreadsheet.
+        const customTeaImages = {
+            "Cinnamon Apricot Tisane": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/cinnamon_apricot_tea_1_1.jpg?raw=true",
+            "Apple Cinnamon Tisane": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Apple%20Cinnamon%20Tisane.jpg?raw=true",
+            "Ashwagandha": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Ashwagandha.jpg?raw=true",
+            "Beet root": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Beet%20Root.jpg?raw=true",
+            "Black tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Black%20tea.png?raw=true",
+             "Bladderwrack": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Bladderwrack.jpg",
+              "Camomile": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Chamomile.jpg",
+              "Cleanse & Flu": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Cleanse%20%26%20clear.jpg",
+              "Ctanberry Orange": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Cranberry%20orange.jpg",
+              "Crimson Berry": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Crimson%20Berry.jpg",
+              "Dandelion Root": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Dandelion%20root.jpg",
+              "Elder Flower": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Elder%20flower.jpg",
+              "Ginger Peach": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Ginger%20Peach.jpg",
+              "Green Tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Green%20Tea.jpg",
+              "Hawthorne": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Hawthome.jpg",
+              "Hibiscus": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Hibiscus.jpg?raw=true",
+              "Lavender": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Lavender.jpg",
+              "Hibiscus Zest": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Catnip.jpg",
+              "Catnip": "",
+            // You can add more URLs here, like this:
+            // "Your Tea Name": "https://link-to-your-image.com/your-image.jpg",
+            // ...and so on for all your teas.
+        };
+
         // Function to parse the CSV string into a usable array of objects
         function parseCSV(csv) {
             const products = [];
@@ -447,7 +481,9 @@ Contact Number,,,,,,,,
                         
                         // Only add products with valid data
                         if (teaName && !isNaN(price)) {
-                            products.push({ teaName, description, oz, price });
+                            // Check if a custom image URL exists, otherwise use a generic placeholder
+                            const imageUrl = customTeaImages[teaName] || `https://placehold.co/400x200/22543d/d4af37?text=Tea+Image`;
+                            products.push({ teaName, description, oz, price, imageUrl });
                         }
                     }
                 }
@@ -462,16 +498,17 @@ Contact Number,,,,,,,,
         // Dynamically create product cards
         products.forEach((product, index) => {
             const productCard = document.createElement('div');
-            productCard.className = 'bg-gray-700 rounded-xl p-6 shadow-md flex flex-col justify-between hover:bg-gray-700 transition-colors duration-200';
+            productCard.className = 'bg-gray-700 rounded-xl p-0 shadow-md flex flex-col justify-between hover:bg-gray-700 transition-colors duration-200 overflow-hidden';
             productCard.innerHTML = `
-                <div>
+                <img src="${product.imageUrl}" alt="${product.teaName}" class="w-full h-32 object-cover rounded-t-xl">
+                <div class="p-6 flex flex-col flex-grow">
                     <h4 class="text-xl font-bold text-gold mb-2">${product.teaName}</h4>
-                    <p class="text-sm text-gray-400 mb-4">${product.description}</p>
-                    <p class="text-lg font-semibold text-forrest-green mb-4">$${product.price.toFixed(2)} for ${product.oz} oz</p>
-                </div>
-                <div class="mt-auto flex items-center justify-between">
-                    <label for="quantity-${index}" class="text-sm font-medium text-gray-400">Quantity:</label>
-                    <input type="number" id="quantity-${index}" name="quantity" class="w-20 rounded-md bg-gray-900 border-gray-600 text-white focus:border-gold focus:ring-gold text-center p-1 transition-all duration-200" value="0" min="0" data-price="${product.price}" data-oz="${product.oz}">
+                    <p class="text-sm text-gray-400 mb-4 line-clamp-3">${product.description}</p>
+                    <p class="text-lg font-semibold text-forrest-green mb-4 mt-auto">$${product.price.toFixed(2)} for ${product.oz} oz</p>
+                    <div class="mt-auto flex items-center justify-between">
+                        <label for="quantity-${index}" class="text-sm font-medium text-gray-400">Quantity:</label>
+                        <input type="number" id="quantity-${index}" name="quantity" class="w-20 rounded-md bg-gray-900 border-gray-600 text-white focus:border-gold focus:ring-gold text-center p-1 transition-all duration-200" value="0" min="0" data-price="${product.price}" data-oz="${product.oz}">
+                    </div>
                 </div>
             `;
             productListDiv.appendChild(productCard);
@@ -516,7 +553,7 @@ Contact Number,,,,,,,,
             document.getElementById('processing-fee').textContent = `$${processingFee.toFixed(2)}`; // Updated processing fee display
             document.getElementById('shipping').textContent = `$${shippingFee.toFixed(2)}`;
             document.getElementById('total-weight-oz').textContent = `${totalWeightInOunces.toFixed(2)} oz`;
-            document.getElementById('total-weight-lbs').textContent = `${totalWeightInPounds.toFixed(2)} lbs`;
+            document.getElementById('total-weight-lbs').textContent = `${totalWeightInOunces > 0 ? totalWeightInPounds.toFixed(2) : (0).toFixed(2)} lbs`;
             document.getElementById('total').textContent = `$${total.toFixed(2)}`;
         }
 
@@ -585,4 +622,3 @@ Contact Number,,,,,,,,
     </script>
 </body>
 </html>
-
