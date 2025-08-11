@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z&D Radiant Root LLC</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Stripe.js v3 for payment processing -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        /* Define a custom color palette for brand consistency */
+        :root {
+            --forrest-green: #e1ebe6; /* A light, rich green */
+            --gold: #d4af37;        /* A classic gold */
+            --dark-bg: #111827;     /* A professional dark background */
+            --dark-card: #1F2937;   /* Slightly lighter dark for cards */
+            --dark-text: #E5E7EB;   /* Light gray text */
+        }
+        
+        .bg-forrest-green {
+            background-color: var(--forrest-green);
+        }
+
+        .text-forrest-green {
+            color: var(--forrest-green);
+        }
+
+        .bg-gold {
+            background-color: var(--gold);
+        }
+
+        .text-gold {
+            color: var(--gold);
+        }
+
+        /* Use Inter font for a professional look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, var(--dark-bg), #0f141e);
+            color: var(--dark-text);
+        }
+
+        /* Custom scrollbar styling for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-card);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4B5563; /* Gray-600 */
+            border-radius: 10px;
+            border: 2px solid var(--dark-card);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B7280; /* Gray-500 */
+        }
+        
+        /* Utility for sticky sidebar */
+        @media (min-width: 1024px) {
+            .lg\:sticky-top-24 {
+                top: 6rem; /* A bit of offset from the top */
+            }
+        }
+
+        /* Styling for the Stripe Card Element */
+        .StripeElement {
+            box-sizing: border-box;
+            height: 40px;
+            padding: 10px 12px;
+            border: 1px solid #4B5563;
+            border-radius: 0.5rem;
+            background-color: #1F2937;
+            color: #E5E7EB;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px 0 rgba(0,0,0,.06);
+            transition: all 150ms ease;
+        }
+        
+        .StripeElement--focus {
+            border-color: #d4af37;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.5);
+        }
+
+        .StripeElement--invalid {
+            border-color: #EF4444; /* Red-500 */
+        }
+
+        .StripeElement--webkit-autofill {
+            background-color: #1F2937 !important;
+        }
+
+        /* Modal for messages */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #1F2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+        }
+        .modal-content button {
+            margin-top: 1rem;
+        }
+        select, select option {
+            color: #E5E7EB;
+            background-color: #1F2937;
+        }
+        select option:hover {
+            background-color: #374151;
+        }
+
+        /* Custom utility for clamping text */
+        .line-clamp-3 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 lg:p-12">
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto">
+        <!-- Header Section -->
+        <header class="bg-gray-800 rounded-2xl shadow-lg p-6 mb-8 flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-3xl sm:text-4xl font-bold text-gold">Z&D Radiant Root LLC</h1>
+            </div>
+            <h2 class="text-xl text-gray-400 mt-2 md:mt-0">Tea Essentials</h2>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Product List Section -->
+            <section class="lg:col-span-2">
+                <h3 class="text-3xl font-semibold mb-6 text-forrest-green">Our Herbal Teas</h3>
+                <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto max-h-[80vh] pr-4">
+                    <!-- Product cards will be dynamically added here by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Order Summary & Shipping Form Section -->
+            <aside class="lg:col-span-1">
+                <div class="bg-gray-800 rounded-2xl shadow-lg p-6 lg:sticky lg:top-24">
+                    <h4 class="text-2xl font-semibold mb-4 text-forrest-green border-b border-gray-700 pb-2">Order Summary</h4>
+                    <div class="space-y-4 text-sm text-gray-300">
+                        <div class="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span id="subtotal" class="text-lg font-medium text-gold">$0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Sales Tax (6%):</span>
+                            <span id="sales-tax" class="text-lg font-medium text-gold">$0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Processing Fee:</span>
+                            <span id="processing-fee" class="text-lg font-medium text-gold">$0.00</span>
+                        </div>
+                        <div class="flex justify-between font-medium text-gold">
+                            <span>Total Weight:</span>
+                            <span class="flex items-center space-x-1">
+                                <span id="total-weight-oz">0.00 oz</span> / <span id="total-weight-lbs">0.00 lbs</span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Shipping (USPS Estimate):</span>
+                            <span id="shipping" class="text-lg font-medium text-gold">$0.00</span>
+                        </div>
+                        <div class="border-t border-gray-700 my-4"></div>
+                        <div class="flex justify-between font-bold text-lg text-white">
+                            <span>Total:</span>
+                            <span id="total" class="text-2xl text-gold">$0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Form and Payment -->
+                    <form id="shipping-form" class="mt-8 space-y-4">
+                        <h4 class="text-xl font-semibold text-white mb-4">Shipping Information</h4>
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-400">Full Name</label>
+                            <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white focus:border-gold focus:ring-gold p-2" required>
+                        </div>
+                        <div>
+                            <label for="address" class="block text-sm font-medium text-gray-400">Street Address</label>
+                            <input type="text" id="address" name="address" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white focus:border-gold focus:ring-gold p-2" required>
+                        </div>
+                        <div>
+                            <label for="city" class="block text-sm font-medium text-gray-400">City</label>
+                            <input type="text" id="city" name="city" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white focus:border-gold focus:ring-gold p-2" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="state" class="block text-sm font-medium text-gray-400">State</label>
+                                <select id="state" name="state" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white focus:border-gold focus:ring-gold p-2" required>
+                                    <option value="" disabled selected>Select State</option>
+                                    <option value="AL">Alabama</option>
+                                    <option value="AK">Alaska</option>
+                                    <option value="AZ">Arizona</option>
+                                    <option value="AR">Arkansas</option>
+                                    <option value="CA">California</option>
+                                    <option value="CO">Colorado</option>
+                                    <option value="CT">Connecticut</option>
+                                    <option value="DE">Delaware</option>
+                                    <option value="FL">Florida</option>
+                                    <option value="GA">Georgia</option>
+                                    <option value="HI">Hawaii</option>
+                                    <option value="ID">Idaho</option>
+                                    <option value="IL">Illinois</option>
+                                    <option value="IN">Indiana</option>
+                                    <option value="IA">Iowa</option>
+                                    <option value="KS">Kansas</option>
+                                    <option value="KY">Kentucky</option>
+                                    <option value="LA">Louisiana</option>
+                                    <option value="ME">Maine</option>
+                                    <option value="MD">Maryland</option>
+                                    <option value="MA">Massachusetts</option>
+                                    <option value="MI">Michigan</option>
+                                    <option value="MN">Minnesota</option>
+                                    <option value="MS">Mississippi</option>
+                                    <option value="MO">Missouri</option>
+                                    <option value="MT">Montana</option>
+                                    <option value="NE">Nebraska</option>
+                                    <option value="NV">Nevada</option>
+                                    <option value="NH">New Hampshire</option>
+                                    <option value="NJ">New Jersey</option>
+                                    <option value="NM">New Mexico</option>
+                                    <option value="NY">New York</option>
+                                    <option value="NC">North Carolina</option>
+                                    <option value="ND">North Dakota</option>
+                                    <option value="OH">Ohio</option>
+                                    <option value="OK">Oklahoma</option>
+                                    <option value="OR">Oregon</option>
+                                    <option value="PA">Pennsylvania</option>
+                                    <option value="RI">Rhode Island</option>
+                                    <option value="SC">South Carolina</option>
+                                    <option value="SD">South Dakota</option>
+                                    <option value="TN">Tennessee</option>
+                                    <option value="TX">Texas</option>
+                                    <option value="UT">Utah</option>
+                                    <option value="VT">Vermont</option>
+                                    <option value="VA">Virginia</option>
+                                    <option value="WA">Washington</option>
+                                    <option value="WV">West Virginia</option>
+                                    <option value="WI">Wisconsin</option>
+                                    <option value="WY">Wyoming</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="zip" class="block text-sm font-medium text-gray-400">Zip Code</label>
+                                <input type="text" id="zip" name="zip" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white focus:border-gold focus:ring-gold p-2" required>
+                            </div>
+                        </div>
+
+                        <h4 class="text-xl font-semibold text-white mb-4 mt-8">Payment Information</h4>
+                        <!-- Stripe Card Element will be inserted here -->
+                        <div id="card-element" class="mt-4">
+                            <!-- A Stripe Element will be inserted here. -->
+                        </div>
+                        
+                        <!-- Used to display form errors -->
+                        <div id="card-errors" role="alert" class="text-red-400 mt-2 text-sm"></div>
+                        
+                        <button id="submit-button" type="submit" class="w-full bg-gold hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-full transition-colors duration-200">
+                            Pay
+                        </button>
+                    </form>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 mt-12 py-4 border-t border-gray-700">
+            &copy; 2025 Z&D Radiant Root LLC. All rights reserved.
+        </footer>
+    </div>
+
+    <!-- Custom Modal for Messages -->
+    <div id="message-modal" class="modal-overlay">
+        <div class="modal-content">
+            <p id="modal-message" class="text-xl text-white"></p>
+            <button id="close-modal" class="bg-forrest-green hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-full">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Stripe API Publishable Key provided by the user
+        const stripe = Stripe('pk_live_51RqvZIEMHhdHUw0dnPBc101Bnxc5PEkyMA4j4bn5qV2lblqCj8A5sVJGyY8RIiuWpryTZ6PSUO87ORGKb8frTbq600ex8oSbI7');
+        const elements = stripe.elements();
+
+        // Create an instance of the card Element.
+        const card = elements.create('card', {
+            style: {
+                base: {
+                    color: '#E5E7EB',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSmoothing: 'antialiased',
+                    fontSize: '16px',
+                    '::placeholder': {
+                        color: '#9CA3AF'
+                    },
+                },
+                invalid: {
+                    color: '#EF4444',
+                    iconColor: '#EF4444'
+                }
+            }
+        });
+
+        // Add an instance of the card Element into the `card-element` div.
+        card.mount('#card-element');
+
+        // Handle real-time validation errors from the card Element.
+        card.addEventListener('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+
+        // The CSV data from the user's file is embedded directly into the script.
+        const csvData = `*ENTER QUANTITY OF TEA WANTED & SEE TOTAL $ AMOUNT NEEDED TO BUY*,,,,,,,,
+Tea Name,Benefits/Description,OZ,PRICE,QUANTITY,TOTAL,,MARKUP,0.2
+Cinnamon Apricot Tisane,"aid digestion, reduce inflammation, and help regulate blood sugar levels",4 oz,8.5,1,8.5,,SALES TAX,0.06
+Apple Cinnamon Tisane,"improved heart health, blood sugar regulation, and digestion,",4 oz,8.5,,0,,,
+Ashwagandha,"‘rejuvinates the body, promotes clarity",4 oz,8,,0,,,
+Beet Root,"Lowers blood pressure, increases energy",2 oz,5,,0, ,,
+Black Tea,delicious..reduces risk of heart disease,3 oz,4,,0,,,
+Bladderwrack,"Ediable seaweed. Can make teas, use in food instead of salt - or bath & skin products",3 oz,5,,0,,,
+Burdock ,"Blood purifier, diuretic, fights cancer, reduces inflammation",4 oz,6.5,,0,,,
+Catnip,"improves sleep, relaxation, & anxiety, Has a calming effect. Helps the stomach",1 oz ,3,,0,,,
+Chai Tea,"helps with digestion, boost immune system, helps with heart health,inflammation",4 oz,5,,0,,,
+Chamomile,"anti inflammatory, aids in sleep, cold fighter, kills certain cancer cells",1 oz,4,,0,,,
+Crimson Berry,"supporting heart health, boosting the immune system, and  aiding in weight mgmt.",3 oz,5,,0,,,
+Cranberry Orange,"support immune health,  digestion, and potentially help with urinary tract infections",4 oz,8.5,,0,,,
+Cleanse & Clear,"contains: burdock, dandelion, marshmallow, ginger, licorice,",2 oz,7.5,,0,,,
+Cold & Flu Brew,"energizes the body, comforts the senses",3 oz,5,,0,,,
+Dandelion Root ,"diuretic that detoxes the liver, boosts the immune system, balances",4 oz,6.5,,0,,,
+Elder Flower,"anti inflammatory, boosts immune system, diuretic, aids in helping with",1 oz,3,,0,,,
+Ginger Peach," digestion, reduce inflammation, and boost immunity",3 oz,3.5,1,3.5,,,
+Ginger Root," help with nausea, digestion, and inflammation, potentially reducing pain and improving heart health", 4 oz,,,
+Green Tea,"improves blood flow, lowers blood",2 oz,3,,0,,,
+Hawthorne,Boosts immune system,2 oz,4,,0,,,
+Lavender:,"relieves insomnia, indigestion, convulsi",1.5 oz,5,1,5,,,
+Hibiscus Tea,"blood pressure, reduce cholesterol levels, and potentially aid in weight management",1.5 oz,4,,0,,,
+Hibiscus Zest," heart health, weight management, promoting liver health, and blood & blood sugar levels.",2 oz,5,,0,,,
+Hibiscus Mint," digestion, potentially reduce stress, and provide a natural boost to the immune system",2 oz,5.5,,0,,,
+Jasmine,"Antioxidant, improve digestion, Blood Pressure, Heart Health",3 oz,5,,0,,,
+Lemon Grass," helps digestion, blood pressure bots Ae ad zt Le",1 oz,3,,0,,,
+Licorice Root,"Strengthens body, use as detox",2 oz ,4,,0,,,
+Mullein Leaf,"helps asthma, copd, recurring congestion, smokers cough",1 oz,5,,0,,,
+Organic Jasmine,"Antioxidant, improve digestion, Blood Pressure, Heart Health",2 oz,5,,0,,,
+Orange Spice Cinnamon,"immune system, improve digestion, and potentially aid in blood sugar regulation",2 oz,4,,0,,,
+Passion Fruit," stress, anxiety, and insomnia, as well as potential immune system support",2 oz,5,,0,,,
+Rose Petals,"antioxidant properties, digestive support, stress and anxiety reduction, l relief menstrual pain",1 oz,5,,0,,,
+Rooibis,"heart health, digestion, and skin health",3 oz,5.5,,0,,,
+Peppermint Leaf: ,"helps with digestive issues, soothes stomach mi",1 oz,4,,0,,,
+Tropical Fruit Tea,"immune system, aid in weight management, and support heart health",3 oz,5,,0,,,
+Triple Berry Tea," antioxidants,  blood sugar and insulin response,  anti-inflammatory and anti-aging effects",2 oz,4,,0,,,
+Winter Blend Tea,"warmth, comfort, and supporting overall well-being ",3 oz,5,,0,,,
+Spearmint Leaf,Has antimicrobial,1 oz,4,,0,,,
+Yerba Mate,full of antioxidants,2 oz,5,,0,,,
+,,,,TOTAL QUANTITY,True,,,
+,,,,MARKUP,3.4000000000000004,,,
+,,,,SALES TAX,1.02,,,
+,,,,TOTAL PRICE,17,,,
+SHIPPING INFO:,,,,,,,,
+Name,,,,,,,,
+shipping address,,,,,,,,
+Apt#,,,,,,,,
+City,,,,,,,,
+State ,,,,,,,,
+Zip,,,,,,,,
+Contact Number,,,,,,,,
+,,,,TOTAL QUANTITY,3,,,
+,,,,MARKUP,3.4000000000000004,,,
+,,,,SALES TAX,1.02,,,
+,,,,USPS SHIPPING,,,,
+,,,,TOTAL PRICE,21.42,,,
+`;
+        
+        // Define constants for calculations
+        const SALES_TAX_RATE = 0.06;
+        const PROCESSING_FEE_RATE = 0.15; // Added processing fee rate
+        
+        // Shipping constants
+        const WEIGHT_PER_OZ = 0.07; // Assumed weight in lbs per ounce of tea
+        const PACKAGING_WEIGHT = 0.5; // Assumed weight in lbs for packaging
+        
+        // Function for a simulated shipping calculator.
+        function calculateShipping(totalWeight, zipCode) {
+            // If there is no zip code or it's not a valid length, return 0.
+            if (!zipCode || zipCode.length < 5) {
+                return 0;
+            }
+            
+            // A simple, simulated zone-based system.
+            // In a real application, this would be a lookup table or a call to a shipping API.
+            const farZoneZips = ['9', '8']; // Simulating far-away zones like West Coast
+            let baseRate;
+
+            if (farZoneZips.some(prefix => zipCode.startsWith(prefix))) {
+                baseRate = 7.50; // Higher rate for far zones
+            } else {
+                baseRate = 5.50; // Standard rate for closer zones
+            }
+
+            if (totalWeight <= 1) return baseRate;
+            if (totalWeight <= 5) return baseRate + 3.25; // Increase for heavier items
+            if (totalWeight <= 10) return baseRate + 7.00;
+            return baseRate + 12.50;
+        }
+
+        // This object is where you can manually add your tea image URLs.
+        // The key must exactly match the "Tea Name" from the spreadsheet.
+        const customTeaImages = {
+            "Cinnamon Apricot Tisane": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/cinnamon_apricot_tea_1_1.jpg?raw=true",
+            "Apple Cinnamon Tisane": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Apple%20Cinnamon%20Tisane.jpg?raw=true",
+            "Ashwagandha": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Ashwagandha.jpg?raw=true",
+            "Beet Root": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Beet%20Root.jpg?raw=true",
+            "Black Tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Black%20tea.png?raw=true",
+            "Bladderwrack": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Bladderwrack.jpg?raw=true",
+            "Chamomile": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Chamomile.jpg?raw=true",
+            "Cleanse & Clear": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Cleanse%20&%20clear.jpg?raw=true",
+            "Cranberry Orange": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Cranberry%20orange.jpg?raw=true",
+            "Crimson Berry": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Crimson%20Berry.jpg?raw=true",
+            "Dandelion Root": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Dandelion%20root.jpg?raw=true",
+            "Elder Flower": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Elder%20Flower.jpg?raw=true",
+            "Ginger Peach": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Ginger%20Peach.jpg?raw=true",
+            "Green Tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Green%20Tea.jpg?raw=true",
+            "Ginger Root":"https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Ginger%20Root.jpg?raw=true",
+            "Hawthorne": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Ginger%20Root.jpg?raw=true",
+            "Lavender": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Lavender.jpg?raw=true",
+            "Hibiscus Zest": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Hibiscus%20Zest.jpg?raw=true",
+            "Burdock": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Burdock.jpg?raw=true",
+            "Catnip": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Catnip.jpg?raw=true",
+            "Cold & Flu Brew": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Jasmine.jpg?raw=true",
+            "Jasmine": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Jasmine.jpg?raw=true",
+            "Spearmint Leaf": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Spearmint%20Leaf.jpg?raw=true",
+            "Tropical Fruit Tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Tropical%20Fruit%20Tea.jpg?raw=true",
+            "Winter Blend Tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Winter%20Blend%20Tea.jpg?raw=true",
+            "Yerba Mate": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Yerba%20Mate.jpg?raw=true",
+            "Lemon Grass": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Lemon%20Grass.jpg?raw=true",
+            "Licorice Root": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Licorice%20Root.jpg?raw=true",
+            "Mullein Leaf": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Mullein%20Leaf.jpg?raw=true",
+            "Orange Spice Cinnamon": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Orange%20Spice%20Cinnamon.jpg?raw=true",
+            "Organic Jasmine": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Burdock.jpg?raw=true",
+            "Passion Fruit": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Passion%20Fruit.jpg?raw=true",
+            "Peppermint Leaf": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Peppermint%20Leaf.jpg?raw=true",
+            "Organic Jasmine": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Organic%20Jasmine.jpg?raw=true",
+            "Rooibis": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Rooibis.jpg?raw=true",
+            "Rose Petals": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Rose%20Petals.jpg?raw=true",
+            "Hibiscus Mint": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Hibiscus%20Mint.jpg?raw=true",
+            "Triple Berry Tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Triple%20Berry%20Tea.jpg?raw=true",
+            "Chai Tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Chai%20Tea.jpg?raw=true",
+            "Hibiscus Tea": "https://github.com/ZandDRadiantRoots/znd-radiant-roots/blob/main/Tea%20Images/Hibiscus%20Tea.jpg?raw=true",
+            
+            
+            // You can add more URLs here, like this:
+            // "Your Tea Name": "https://link-to-your-image.com/your-image.jpg",
+            // ...and so on for all your teas.
+        };
+
+        // Function to parse the CSV string into a usable array of objects
+        function parseCSV(csv) {
+            const products = [];
+            const lines = csv.split('\n').filter(line => line.trim() !== '');
+            for (let i = 2; i < lines.length; i++) {
+                // Stop parsing when we hit the summary rows
+                if (lines[i].includes('TOTAL QUANTITY')) break;
+
+                const values = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if (values.length >= 4) {
+                    const teaName = values[0].trim().replace(/:$/, '');
+                    if (teaName) {
+                        const description = values[1].trim().replace(/^"|"$/g, '');
+                        const oz = parseFloat(values[2].trim());
+                        const price = parseFloat(values[3].trim());
+                        
+                        // Only add products with valid data
+                        if (teaName && !isNaN(price)) {
+                            // Check if a custom image URL exists, otherwise use a generic placeholder
+                            const imageUrl = customTeaImages[teaName] || `https://placehold.co/400x200/22543d/d4af37?text=Tea+Image`;
+                            products.push({ teaName, description, oz, price, imageUrl });
+                        }
+                    }
+                }
+            }
+            return products;
+        }
+
+        // Get the product data from the parsed CSV
+        const products = parseCSV(csvData);
+        const productListDiv = document.getElementById('product-list');
+
+        // Dynamically create product cards
+        products.forEach((product, index) => {
+            const productCard = document.createElement('div');
+            productCard.className = 'bg-gray-700 rounded-xl p-0 shadow-md flex flex-col justify-between hover:bg-gray-700 transition-colors duration-200 overflow-hidden';
+            productCard.innerHTML = `
+                <img src="${product.imageUrl}" alt="${product.teaName}" class="w-full h-32 object-cover rounded-t-xl">
+                <div class="p-6 flex flex-col flex-grow">
+                    <h4 class="text-xl font-bold text-gold mb-2">${product.teaName}</h4>
+                    <p class="text-sm text-gray-400 mb-4 line-clamp-3">${product.description}</p>
+                    <p class="text-lg font-semibold text-forrest-green mb-4 mt-auto">$${product.price.toFixed(2)} for ${product.oz} oz</p>
+                    <div class="mt-auto flex items-center justify-between">
+                        <label for="quantity-${index}" class="text-sm font-medium text-gray-400">Quantity:</label>
+                        <input type="number" id="quantity-${index}" name="quantity" class="w-20 rounded-md bg-gray-900 border-gray-600 text-white focus:border-gold focus:ring-gold text-center p-1 transition-all duration-200" value="0" min="0" data-price="${product.price}" data-oz="${product.oz}">
+                    </div>
+                </div>
+            `;
+            productListDiv.appendChild(productCard);
+        });
+
+        // Function to update the order summary
+        function updateOrderSummary() {
+            let subtotal = 0;
+            let totalWeightInOunces = 0;
+            const quantityInputs = document.querySelectorAll('input[name="quantity"]');
+            
+            quantityInputs.forEach(input => {
+                const quantity = parseInt(input.value, 10) || 0;
+                const price = parseFloat(input.dataset.price);
+                const oz = parseFloat(input.dataset.oz);
+
+                subtotal += quantity * price;
+                totalWeightInOunces += quantity * oz;
+            });
+
+            // Get zip code for shipping calculation
+            const zipCode = document.getElementById('zip').value;
+
+            // Calculate totals
+            const salesTaxAmount = subtotal * SALES_TAX_RATE;
+            
+            const totalWeightInPounds = (totalWeightInOunces * WEIGHT_PER_OZ) + PACKAGING_WEIGHT;
+            const shippingFee = calculateShipping(totalWeightInPounds, zipCode);
+
+            // Calculate subtotal plus tax and shipping
+            const subtotalPlusTaxAndShipping = subtotal + salesTaxAmount + shippingFee;
+
+            // Calculate processing fee as 15% of the subtotal + tax + shipping
+            const processingFee = subtotalPlusTaxAndShipping * PROCESSING_FEE_RATE;
+
+            // Calculate the final total
+            const total = subtotalPlusTaxAndShipping + processingFee;
+            
+            // Update the DOM with formatted currency
+            document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('sales-tax').textContent = `$${salesTaxAmount.toFixed(2)}`;
+            document.getElementById('processing-fee').textContent = `$${processingFee.toFixed(2)}`; // Updated processing fee display
+            document.getElementById('shipping').textContent = `$${shippingFee.toFixed(2)}`;
+            document.getElementById('total-weight-oz').textContent = `${totalWeightInOunces.toFixed(2)} oz`;
+            document.getElementById('total-weight-lbs').textContent = `${totalWeightInOunces > 0 ? totalWeightInPounds.toFixed(2) : (0).toFixed(2)} lbs`;
+            document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Add event listeners to all quantity inputs and new shipping fields
+        document.querySelectorAll('input[name="quantity"]').forEach(input => {
+            input.addEventListener('input', updateOrderSummary);
+        });
+        
+        document.getElementById('state').addEventListener('change', updateOrderSummary);
+        document.getElementById('zip').addEventListener('input', updateOrderSummary);
+
+        // Initial summary calculation
+        updateOrderSummary();
+
+        // --- Custom Message Modal Functions ---
+        const messageModal = document.getElementById('message-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const closeModalButton = document.getElementById('close-modal');
+
+        function showMessage(message) {
+            modalMessage.textContent = message;
+            messageModal.style.display = 'flex';
+        }
+
+        closeModalButton.addEventListener('click', () => {
+            messageModal.style.display = 'none';
+        });
+
+        // Handle form submission and Stripe payment
+        const form = document.getElementById('shipping-form');
+        const submitButton = document.getElementById('submit-button');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Disable the button to prevent multiple clicks
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processing...';
+
+            const { paymentMethod, error } = await stripe.createPaymentMethod({
+                type: 'card',
+                card: card,
+                billing_details: {
+                    name: document.getElementById('name').value,
+                },
+            });
+
+            if (error) {
+                // Show error to your customer (e.g., insufficient funds, card declined)
+                const errorElement = document.getElementById('card-errors');
+                errorElement.textContent = error.message;
+                submitButton.disabled = false;
+                submitButton.textContent = 'Pay';
+            } else {
+                // PaymentMethod was created. Here, you would typically send the paymentMethod.id to your server.
+                // This is a client-only demo, so we'll simulate the server response.
+                console.log('PaymentMethod created:', paymentMethod);
+                
+                // Simulate a successful payment and show a message
+                showMessage('Payment successful! Thank you for your order.');
+
+                // Re-enable the button after success
+                submitButton.disabled = false;
+                submitButton.textContent = 'Pay';
+            }
+        });
+    </script>
+</body>
+</html>
